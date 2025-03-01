@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Adversarial Attack Tool</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        label { display: inline-block; width: 150px; }
+        select, input { margin-bottom: 10px; }
+        #result { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Adversarial Attack Tool</h1>
+    <form id="attackForm">
+        <label>Attack Method:</label>
+        <select name="attack_method">
+            <option value="PGD" selected>PGD</option>
+            <option value="FGSM">FGSM</option>
+            <option value="C&&W">C&&W</option>
+            <option value="DeepFool">DeepFool</option>
+            <option value="LBFGS">LBFGS</option>
+            <option value="NATTACK">NATTACK</option>
+            <option value="Onepixel">Onepixel</option>
+            <option value="FASTPGD">FASTPGD</option>
+        </select><br>
+
+        <label>Attack Model:</label>
+        <select name="attack_model">
+            <option value="CNN" selected>CNN</option>
+            <option value="ResNet18">ResNet18</option>
+            <option value="ResNet34">ResNet34</option>
+            <option value="ResNet50">ResNet50</option>
+            <option value="ResNet101">ResNet101</option>
+            <option value="ResNet152">ResNet152</option>
+            <option value="densenet121">densenet121</option>
+            <option value="densenet161">densenet161</option>
+            <option value="densenet169">densenet169</option>
+            <option value="densenet201">densenet201</option>
+            <option value="vgg11">vgg11</option>
+            <option value="vgg13">vgg13</option>
+            <option value="vgg16">vgg16</option>
+            <option value="vgg19">vgg19</option>
+        </select><br>
+
+        <label>Path:</label>
+        <input type="text" name="path" value="./trained_models/"><br>
+
+        <label>File Name:</label>
+        <input type="text" name="file_name" value="MNIST_CNN_epoch_20.pt"><br>
+
+        <label>Dataset:</label>
+        <select name="dataset">
+            <option value="MNIST" selected>MNIST</option>
+            <option value="CIFAR10">CIFAR10</option>
+        </select><br>
+
+        <label>Batch Size:</label>
+        <input type="number" name="batch_size" value="1000"><br>
+
+        <label>Batch Num:</label>
+        <input type="number" name="batch_num" value="1000"><br>
+
+        <label>Epsilon:</label>
+        <input type="number" step="0.01" name="epsilon" value="0.3"><br>
+
+        <label>Device:</label>
+        <select name="device">
+            <option value="cuda" selected>cuda</option>
+            <option value="cpu">cpu</option>
+        </select><br>
+
+        <label>Random Targeted:</label>
+        <select name="random_targeted">
+            <option value="False" selected>False</option>
+            <option value="True">True</option>
+        </select><br>
+
+        <label>Target Label:</label>
+        <input type="number" name="target_label" value="-1"><br>
+
+        <button type="submit">Run Attack</button>
+    </form>
+
+    <div id="result"></div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $('#attackForm').submit(function(event) {
+            event.preventDefault();
+            $.ajax({
+                url: '/run_attack',
+                type: 'POST',
+                data: $(this).serialize(),
+                success: function(response) {
+                    if (response.error) {
+                        $('#result').html(`<p>Error: ${response.error}</p>`);
+                    } else {
+                        let result = '<h2>Results</h2>';
+                        result += `<p>Test Loss: ${response.test_loss}</p>`;
+                        result += `<p>Accuracy: ${response.accuracy}%</p>`;
+                        result += '<h3>Parameters Used:</h3><ul>';
+                        for (let [key, value] of Object.entries(response.parameters)) {
+                            result += `<li>${key}: ${value}</li>`;
+                        }
+                        result += '</ul>';
+                        $('#result').html(result);
+                    }
+                },
+                error: function() {
+                    $('#result').html('<p>Error running attack.</p>');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
